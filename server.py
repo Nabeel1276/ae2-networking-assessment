@@ -1,48 +1,93 @@
 import socket
-import sys
+import sys, os
 from common import socket_to_screen, keyboard_to_socket
+
+
+def get_client_args(socket, sock_addr):
+    print(
+        sock_addr + ": ", end="", flush=True
+    )  # Use end="" to avoid adding a newline after the communicating partner's info, flush=True to force-print the info
+
+    data = bytearray(1)
+    bytes_read = 0
+
+    while len(data) > 0 and "\n" not in data.decode():
+        data = socket.recv(4096)
+        client_args = data.decode().split()
+    return client_args
+
+
+def handle_file_upload(filename, content):
+    print("in handle file upload")
+    with open(filename, "w") as f:
+        # Define the data to be written
+        print(filename, content)
+        # Use a for loop to write each line of data to the file
+        for line in content:
+            f.write(line)
+            # Optionally, print the data as it is written to the file
+            print(line)
+        # Receive the request type and filename from the client
+        # request_type = cli_sock.recv(1024).decode()
+        # filename = cli_sock.recv(1024).decode()
+
+        # Check if the file already exists
+        if os.path.exists(filename):
+            cli_sock.send("File already exists. Upload denied.".encode())
+            return
+
 
 # Create the socket on which the server will receive new connections
 srv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 try:
-	srv_sock.bind(("0.0.0.0", int(sys.argv[1]))) # sys.argv[1] is the 1st argument on the command line
-	srv_sock.listen(5)
+    port_number = int(sys.argv[1])
+    srv_sock.bind(
+        ("0.0.0.0", port_number)
+    )  # sys.argv[1] is the 1st argument on the command line
+    srv_sock.listen(5)
 except Exception as e:
-	# Print the exception message
-	print(e)
-	# Exit with a non-zero value, to indicate an error condition
-	exit(1)
+    # Print the exception message
+    print(e)
+    # Exit with a non-zero value, to indicate an error condition
+    exit(1)
 
 # Loop forever (or at least for as long as no fatal errors occur)
 while True:
-	try:
-		print("Waiting for new client... ")
-		
-		cli_sock, cli_addr = srv_sock.accept()
-		cli_addr_str = str(cli_addr) # Translate the client address to a string (to be used shortly)
+    try:
+        print("Server up and running on localhost port", port_number)
 
-		print("Client " + cli_addr_str + " connected. Now chatting...")
+        cli_sock, cli_addr = srv_sock.accept()
+        cli_addr_str = str(
+            cli_addr
+        )  # Translate the client address to a string (to be used shortly)
 
-		# Loop until either the client closes the connection or the user requests termination
-		while True:
-			# First, read data from client and print on screen
-			bytes_read = socket_to_screen(cli_sock, cli_addr_str)
-			if bytes_read == 0:
-				print("Client closed connection.")
-				break
+        print("Client " + cli_addr_str + " connected. Now chatting...")
 
-			# Then, read data from user and send to client
-			bytes_sent = keyboard_to_socket(cli_sock)
-			if bytes_sent == 0:
-				print("User-requested exit.")
-				break
+        # Loop until either the client closes the connection or the user requests termination
+        while True:
+            # First, read data from client and print on screen
+            client_args = get_client_args(cli_sock, cli_addr_str)
+            print("AAAAAAABBBBBBCCCCCCCC", client_args)
+            if client_args[0] == "UPLOAD":
+                handle_file_upload(client_args[1], client_args[2])
 
-	finally:
-		cli_sock.close()
+            bytes_read = socket_to_screen(cli_sock, cli_addr_str)
+            if bytes_read == 0:
+                print("Client closed connection.")
+                break
 
-# Close the server socket as well to release its resources back to the OS
-srv_sock.close()
+            # Then, read data from user and send to client
+            bytes_sent = keyboard_to_socket(cli_sock)
+            if bytes_sent == 0:
+                print("User-requested exit.")
+                break
 
-# Exit with a zero value, to indicate success
-exit(0)
+    finally:
+        cli_sock.close()
+
+        # Close the server socket as well to release its resources back to the OS
+        srv_sock.close()
+
+        # Exit with a zero value, to indicate success
+        exit(0)

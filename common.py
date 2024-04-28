@@ -10,6 +10,7 @@ def socket_to_screen(socket, sock_addr):
 	while len(data) > 0 and "\n" not in data.decode():
 		data = socket.recv(4096)
 
+		print("AAAAAAAAAAAAAA", data.decode(), end="")
 		print(data.decode(), end="") # Use end="" to avoid adding a newline per print() call
 		bytes_read += len(data)
 	return bytes_read
