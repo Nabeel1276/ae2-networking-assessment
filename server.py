@@ -17,24 +17,20 @@ def get_client_args(socket, sock_addr):
     return client_args
 
 
-def handle_file_upload(filename, content):
+def handle_file_upload(filepath, content):
     print("in handle file upload")
-    with open(filename, "w") as f:
+    if os.path.exists(filepath):
+        print("File already exists. Upload denied.", filepath)
+        return
+    with open(filepath, "w") as f:
+
         # Define the data to be written
-        print(filename, content)
+        print(filepath, content)
         # Use a for loop to write each line of data to the file
         for line in content:
             f.write(line)
-            # Optionally, print the data as it is written to the file
             print(line)
-        # Receive the request type and filename from the client
-        # request_type = cli_sock.recv(1024).decode()
-        # filename = cli_sock.recv(1024).decode()
-
-        # Check if the file already exists
-        if os.path.exists(filename):
-            cli_sock.send("File already exists. Upload denied.".encode())
-            return
+    return
 
 
 # Create the socket on which the server will receive new connections
