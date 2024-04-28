@@ -17,21 +17,29 @@ def get_client_args(socket, sock_addr):
     return client_args
 
 
+def getfilename(filepath):
+    return os.path.basename(filepath)
+
+
+def get_file_content():
+    print("hello")
+
+
 def handle_file_upload(filepath, content):
     print("in handle file upload")
-    if os.path.exists(filepath):
-        print("File already exists. Upload denied.", filepath)
-        return
-    with open(filepath, "w") as f:
-
+    filename = getfilename(filepath)
+    if getfilename:
+        print("YES! GOT THE FILE NAME", filename)
+        if os.path.exists(filename):
+            print("File already exists. Upload denied.", filepath)
+    with open(filename, "w") as f:
         # Define the data to be written
-        print(filepath, content)
+        print(filename, filepath, content)
         # Use a for loop to write each line of data to the file
         for line in content:
             f.write(line)
             print(line)
-    return
-
+        return
 
 # Create the socket on which the server will receive new connections
 srv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
