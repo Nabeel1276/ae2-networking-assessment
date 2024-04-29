@@ -3,20 +3,38 @@ import argparse
 import os, sys
 
 
-def start_client():
-    host = sys.argv[1]
-    port = int(sys.argv[2])
-    file_path = sys.argv[3]
+def display_options(client_socket):
+    # Display options to the user
+    print("Please select an option:")
+    print("1. Upload a file")
+    print("2. Download a file")
+    print("3. Listing of 1st-level directory contents \n")
 
-    # Create a socket object
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # Prompt the user for input
+    choice = input("Enter the number of your choice: \n")
 
-    # Connect to the server
-    client_socket.connect((host, port))
+    # Process the user's choice
+    if choice == "1":
+        print("You selected Upload a file")
+        # Prompt the user for text input
+        file_path = input(f"Please enter filepath for the file you wish to upload: ")
+        upload_file(file_path, client_socket)
+    elif choice == "2":
+        print("You selected Download a file")
+    elif choice == "3":
+        print("You selected Listing of 1st-level directory contents")
+    else:
+        print("Invalid choice. Please enter a valid option.")
 
+
+def upload_file(file_path, client_socket):
     # Extract filename and file size
     filename = os.path.basename(file_path)
     filesize = os.path.getsize(file_path)
+
+    if os.path.exists(filename):
+        print(filename, "already exists. Upload denied.")
+        return
 
     # Send file info to the server
     client_socket.send("{}|{}".format(filename, filesize).encode())
@@ -35,8 +53,22 @@ def start_client():
 
     print("File '{}' sent successfully.".format(filename))
 
+
+def start_client():
+    host = sys.argv[1]
+    port = int(sys.argv[2])
+
+    # Create a socket object
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Connect to the server
+    client_socket.connect((host, port))
+
+    display_options(client_socket)
+
     # Close the connection
     client_socket.close()
+
 
 if __name__ == "__main__":
     start_client()

@@ -2,7 +2,6 @@ import socket
 import argparse
 import sys, os
 
-
 def start_server():
     port_number = int(sys.argv[1])
 
