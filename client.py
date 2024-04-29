@@ -1,43 +1,59 @@
 import socket
-import sys
-from common import socket_to_screen, keyboard_to_socket
+import argparse
+import os
 
-# Create the socket with which we will connect to the server
-cli_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# The server's address is a tuple, comprising the server's IP address or hostname, and port number
-srv_addr = (sys.argv[1], int(sys.argv[2])) # sys.argv[x] is the x'th argument on the command line
+def start_client(host, port, file_path):
+    # Create a socket object
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# Convert to string, to be used shortly
-srv_addr_str = str(srv_addr)
-try:
-	print("Connecting to " + srv_addr_str + "... ")
-	cli_sock.connect(srv_addr)
-	
-	print("Connected. Now chatting...")
-except Exception as e:
-	# Print the exception message
-	print(e)
-	# Exit with a non-zero value, to indicate an error condition
-	exit(1)
-try:
-	# Loop until either the server closes the connection or the user requests termination
-	while True:
-		# First, read data from keyboard and send to server
-		bytes_sent = keyboard_to_socket(cli_sock)
-		if bytes_sent == 0:
-			print("User-requested exit.")
-			break
+    # Connect to the server
+    client_socket.connect((host, port))
 
-		# Then, read data from server and print on screen
-		bytes_read = socket_to_screen(cli_sock, srv_addr_str)
-		if bytes_read == 0:
-			print("Server closed connection.")
-			break
+    # Extract filename and file size
+    filename = os.path.basename(file_path)
+    filesize = os.path.getsize(file_path)
 
-finally:
+    # Send file info to the server
+    client_socket.send("{}|{}".format(filename, filesize).encode())
 
-	cli_sock.close()
+    # Wait for server's confirmation
+    confirmation = client_socket.recv(1024).decode()
+    if confirmation != "READY":
+        print("Server is not ready to receive the file.")
+        client_socket.close()
+        return
 
-# Exit with a zero value, to indicate success
-exit(0)
+    # Open and send the file
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(1024), b""):
+            client_socket.sendall(chunk)
+
+    print("File '{}' sent successfully.".format(filename))
+
+    # Close the connection
+    client_socket.close()
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Client for file uploading")
+    parser.add_argument(
+        "-H",
+        "--host",
+        default="127.0.0.1",
+        help="Host address of the server (default: 127.0.0.1)",
+    )
+    parser.add_argument(
+        "-p",
+        "--port",
+        type=int,
+        default=5555,
+        help="Port number of the server (default: 5555)",
+    )
+    parser.add_argument("file_path", help="Path of the file to upload")
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_arguments()
+    start_client(args.host, args.port, args.file_path)
