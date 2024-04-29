@@ -1,9 +1,13 @@
 import socket
 import argparse
-import os
+import os, sys
 
 
-def start_client(host, port, file_path):
+def start_client():
+    host = sys.argv[1]
+    port = int(sys.argv[2])
+    file_path = sys.argv[3]
+
     # Create a socket object
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -34,26 +38,5 @@ def start_client(host, port, file_path):
     # Close the connection
     client_socket.close()
 
-
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="Client for file uploading")
-    parser.add_argument(
-        "-H",
-        "--host",
-        default="127.0.0.1",
-        help="Host address of the server (default: 127.0.0.1)",
-    )
-    parser.add_argument(
-        "-p",
-        "--port",
-        type=int,
-        default=5555,
-        help="Port number of the server (default: 5555)",
-    )
-    parser.add_argument("file_path", help="Path of the file to upload")
-    return parser.parse_args()
-
-
 if __name__ == "__main__":
-    args = parse_arguments()
-    start_client(args.host, args.port, args.file_path)
+    start_client()

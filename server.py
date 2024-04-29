@@ -1,21 +1,23 @@
 import socket
 import argparse
-import os
+import sys, os
 
 
-def start_server(host, port):
+def start_server():
+    port_number = int(sys.argv[1])
+
     # Create a socket object
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Bind the socket to a host and port
-    server_socket.bind((host, port))
+    server_socket.bind(("0.0.0.0", port_number))
 
     # Listen for incoming connections
     server_socket.listen(1)
 
     while True:
         try:
-            print("Server up and running on localhost port", port)
+            print("Server up and running on localhost port", port_number)
 
             # Accept incoming connection
             client_socket, client_address = server_socket.accept()
@@ -51,26 +53,7 @@ def start_server(host, port):
         finally:
             # Close the connection
             client_socket.close()
-
-
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="Server for file uploading")
-    parser.add_argument(
-        "-H",
-        "--host",
-        default="127.0.0.1",
-        help="Host address to bind (default: 127.0.0.1)",
-    )
-    parser.add_argument(
-        "-p",
-        "--port",
-        type=int,
-        default=5555,
-        help="Port number to listen on (default: 5555)",
-    )
-    return parser.parse_args()
-
+            print("Closed client connection.")
 
 if __name__ == "__main__":
-    args = parse_arguments()
-    start_server(args.host, args.port)
+    start_server()
