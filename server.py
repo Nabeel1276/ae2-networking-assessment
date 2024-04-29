@@ -4,6 +4,7 @@ import sys, os
 
 def start_server():
     port_number = int(sys.argv[1])
+    files_dir = "./public_files/"
 
     # Create a socket object
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -32,6 +33,11 @@ def start_server():
                 filename, filesize = file_info.split("|")
                 filename = os.path.basename(filename)
                 filesize = int(filesize)
+                dest_file_path = files_dir + filename
+
+                if os.path.exists(dest_file_path):
+                    print(dest_file_path, "already exists. Upload denied.")
+                    break
 
                 # Inform client to start sending the file
                 client_socket.send("READY".encode())
@@ -45,7 +51,7 @@ def start_server():
                     received_data.extend(packet)
 
                 # Write the received data to the file
-                with open(filename, "wb") as f:
+                with open(dest_file_path, "wb") as f:
                     f.write(received_data)
                 print("File '{}' received and saved.".format(filename))
 

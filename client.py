@@ -21,10 +21,16 @@ def display_options(client_socket):
         upload_file(file_path, client_socket)
     elif choice == "2":
         print("You selected Download a file")
+        filename = input(f"Please enter filename for the file you wish to download: ")
+        download_file(filename, client_socket)
     elif choice == "3":
         print("You selected Listing of 1st-level directory contents")
     else:
         print("Invalid choice. Please enter a valid option.")
+
+
+def download_file(filename, client_socket):
+    print("You want to download '{}'".format(filename))
 
 
 def upload_file(file_path, client_socket):
@@ -32,17 +38,14 @@ def upload_file(file_path, client_socket):
     filename = os.path.basename(file_path)
     filesize = os.path.getsize(file_path)
 
-    if os.path.exists(filename):
-        print(filename, "already exists. Upload denied.")
-        return
-
     # Send file info to the server
     client_socket.send("{}|{}".format(filename, filesize).encode())
 
     # Wait for server's confirmation
     confirmation = client_socket.recv(1024).decode()
+
     if confirmation != "READY":
-        print("Server is not ready to receive the file.")
+        print("Upload denied, it is possible that the file already exists.")
         client_socket.close()
         return
 
@@ -52,7 +55,6 @@ def upload_file(file_path, client_socket):
             client_socket.sendall(chunk)
 
     print("File '{}' sent successfully.".format(filename))
-
 
 def start_client():
     host = sys.argv[1]
@@ -68,7 +70,6 @@ def start_client():
 
     # Close the connection
     client_socket.close()
-
 
 if __name__ == "__main__":
     start_client()
