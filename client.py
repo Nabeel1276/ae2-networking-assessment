@@ -4,18 +4,14 @@ import os, sys
 
 
 def run_command(action, client_socket, file_path):
-    # Process the user's choice
     if action == "put":
         print("You specified that you want to Upload a file")
-        # Prompt the user for text input
         upload_file(file_path, client_socket)
     elif action == "get":
         print("You specified that you want to Download a file")
         download_file(file_path, client_socket)
     elif action == "list":
-        print(
-            "You specified that you want are wanting a Listing of 1st-level directory contents"
-        )
+        print("You want Listing of 1st-level directory contents")
         list_file(client_socket)
     else:
         print("Invalid action specified. Please enter a valid action.")
@@ -61,8 +57,6 @@ def upload_file(file_path, client_socket):
 
 
 def list_file(client_socket):
-    print("You want to list current directoru files")
-
     # Send file info to the server
     client_socket.send("{}|{}|{}".format("list", "", 0).encode())
 

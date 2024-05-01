@@ -57,7 +57,6 @@ def start_server():
                 if not file_info:
                     break
                 if action_type == "upload":
-                    print("hello world")
                     file_name = os.path.basename(file_name)
                     file_size = int(file_size)
                     dest_file_path = files_dir + file_name
@@ -81,12 +80,11 @@ def start_server():
                     with open(dest_file_path, "wb") as f:
                         f.write(received_data)
                     print("File '{}' received and saved.".format(file_name))
+                    break
                 elif action_type == "download":
-                    print("We are in the download function")
                     download_file(files_dir, file_name, client_socket)
                     break
                 elif action_type == "list":
-                    print("We are in the list function")
                     list_files(client_socket)
                     break
         finally:
