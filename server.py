@@ -71,7 +71,8 @@ def start_server():
                     print("We are in the download function")
                     download_file(files_dir, file_name, client_socket)
                     break
-
+                elif action_type == "list":
+                    print("hello")
         finally:
             # Close the connection
             client_socket.close()

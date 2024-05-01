@@ -3,7 +3,7 @@ import argparse
 import os, sys
 
 
-def run_command(action, file_path, client_socket):
+def run_command(action, client_socket, file_path=None):
     # Process the user's choice
     if action == "put":
         print("You specified that you want to Upload a file")
@@ -13,7 +13,10 @@ def run_command(action, file_path, client_socket):
         print("You specified that you want to Download a file")
         download_file(file_path, client_socket)
     elif action == "list":
-        print("You specified that you want to Listing of 1st-level directory contents")
+        print(
+            "You specified that you want are wanting a Listing of 1st-level directory contents"
+        )
+        list_file(file_path)
     else:
         print("Invalid action specified. Please enter a valid action.")
 
@@ -32,7 +35,6 @@ def download_file(file_name, client_socket):
 
     print("File received successfully")
     client_socket.close()
-
 
 def upload_file(file_path, client_socket):
     # Extract filename and file size
@@ -57,11 +59,28 @@ def upload_file(file_path, client_socket):
 
     print("File '{}' sent successfully.".format(filename))
 
+
+def list_file(directory):
+    files = os.listdir(directory)
+
+    # Print the list of files and directories
+    print("Contents of directory '{}':".format(directory))
+    for file in files:
+        print("- {}".format(file))
+
+
 def start_client():
-    host = sys.argv[1]
-    port = int(sys.argv[2])
-    action = sys.argv[3]
-    file_path = sys.argv[4]
+    if len(sys.argv) >= 2:
+        host = sys.argv[1]
+        port = int(sys.argv[2])
+        action = sys.argv[3]
+        if len(sys.argv) == 5:
+            file_path = sys.argv[4]
+        else:
+            file_path = None
+    else:
+        print("Invalid number of arguments provided.")
+        return
 
     # Create a socket object
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -69,7 +88,7 @@ def start_client():
     # Connect to the server
     client_socket.connect((host, port))
 
-    run_command(action, file_path, client_socket)
+    run_command(action, client_socket, file_path)
 
     # Close the connection
     client_socket.close()
