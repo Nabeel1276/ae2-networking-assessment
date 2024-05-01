@@ -3,27 +3,38 @@ import argparse
 import os, sys
 
 
-def run_command(action, file_path, client_socket):
+def display_options(client_socket):
+    # Display options to the user
+    print("Please select an option:")
+    print("1. Upload a file")
+    print("2. Download a file")
+    print("3. Listing of 1st-level directory contents \n")
+
+    # Prompt the user for input
+    choice = input("Enter the number of your choice: \n")
+
     # Process the user's choice
-    if action == "put":
-        print("You specified that you want to Upload a file")
+    if choice == "1":
+        print("You selected Upload a file")
         # Prompt the user for text input
+        file_path = input(f"Please enter filepath for the file you wish to upload: ")
         upload_file(file_path, client_socket)
-    elif action == "get":
-        print("You specified that you want to Download a file")
-        download_file(file_path, client_socket)
-    elif action == "list":
-        print("You specified that you want to Listing of 1st-level directory contents")
+    elif choice == "2":
+        print("You selected Download a file")
+        filename = input(f"Please enter filename for the file you wish to download: ")
+        download_file(filename, client_socket)
+    elif choice == "3":
+        print("You selected Listing of 1st-level directory contents")
     else:
-        print("Invalid action specified. Please enter a valid action.")
+        print("Invalid choice. Please enter a valid option.")
 
 
-def download_file(file_name, client_socket):
-    print("You want to download '{}'".format(file_name))
+def download_file(filename, client_socket):
+    print("You want to download '{}'".format(filename))
     # Send file info to the server
-    client_socket.send("{}|{}|{}".format("download", file_name, 0).encode())
+    client_socket.send("{}|{}|{}".format("download", filename, 0).encode())
     # Receive data from the server and write it to a file
-    with open(file_name, "wb") as file:
+    with open(filename, "wb") as file:
         while True:
             data = client_socket.recv(1024)
             if not data:
@@ -60,8 +71,6 @@ def upload_file(file_path, client_socket):
 def start_client():
     host = sys.argv[1]
     port = int(sys.argv[2])
-    action = sys.argv[3]
-    file_path = sys.argv[4]
 
     # Create a socket object
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -69,7 +78,7 @@ def start_client():
     # Connect to the server
     client_socket.connect((host, port))
 
-    run_command(action, file_path, client_socket)
+    display_options(client_socket)
 
     # Close the connection
     client_socket.close()

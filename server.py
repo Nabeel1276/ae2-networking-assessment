@@ -13,7 +13,6 @@ def download_file(files_dir, filename, client_socket):
         print("File sent successfully")
         return
 
-
 def start_server():
     port_number = int(sys.argv[1])
     files_dir = "./public_files/"
@@ -38,16 +37,16 @@ def start_server():
             file_info = client_socket.recv(1024).decode()
 
             # Extract filename and file size from file_info
-            action_type, filename, filesize = file_info.split("|")
+            action_type, file_name, filesize = file_info.split("|")
 
             # Receive and save uploaded files
             while True:
                 if not file_info:
                     break
                 if action_type == "upload":
-                    filename = os.path.basename(filename)
+                    file_name = os.path.basename(file_name)
                     filesize = int(filesize)
-                    dest_file_path = files_dir + filename
+                    dest_file_path = files_dir + file_name
 
                     if os.path.exists(dest_file_path):
                         print(dest_file_path, "already exists. Upload denied.")
@@ -67,10 +66,10 @@ def start_server():
                     # Write the received data to the file
                     with open(dest_file_path, "wb") as f:
                         f.write(received_data)
-                    print("File '{}' received and saved.".format(filename))
+                    print("File '{}' received and saved.".format(file_name))
                 elif action_type == "download":
                     print("We are in the download function")
-                    download_file(files_dir, filename, client_socket)
+                    download_file(files_dir, file_name, client_socket)
                     break
 
         finally:
