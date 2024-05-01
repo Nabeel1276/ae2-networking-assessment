@@ -31,6 +31,18 @@ def display_options(client_socket):
 
 def download_file(filename, client_socket):
     print("You want to download '{}'".format(filename))
+    # Send file info to the server
+    client_socket.send("{}|{}|{}".format("download", filename, 0).encode())
+    # Receive data from the server and write it to a file
+    with open(filename, "wb") as file:
+        while True:
+            data = client_socket.recv(1024)
+            if not data:
+                break
+            file.write(data)
+
+    print("File received successfully")
+    client_socket.close()
 
 
 def upload_file(file_path, client_socket):
@@ -39,7 +51,7 @@ def upload_file(file_path, client_socket):
     filesize = os.path.getsize(file_path)
 
     # Send file info to the server
-    client_socket.send("{}|{}".format(filename, filesize).encode())
+    client_socket.send("{}|{}|{}".format("upload", filename, filesize).encode())
 
     # Wait for server's confirmation
     confirmation = client_socket.recv(1024).decode()
