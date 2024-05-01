@@ -3,15 +3,28 @@ import argparse
 import sys, os
 
 
-def download_file(files_dir, filename, client_socket):
-    print("you want to download", filename)
-    with open(files_dir + filename, "rb") as file:
+def list_files(client_socket):
+    print("you want to list current directory content")
+    # Get list of files in server's working directory
+    files = os.listdir()
+
+    # Send the list of files to the client
+    client_socket.sendall("\n".join(files).encode())
+
+    # Close the connection
+    client_socket.close()
+
+
+def download_file(files_dir, file_name, client_socket):
+    print("you want to download", file_name)
+    with open(files_dir + file_name, "rb") as file:
         data = file.read(1024)
         while data:
             client_socket.send(data)
             data = file.read(1024)
         print("File sent successfully")
         return
+
 
 def start_server():
     port_number = int(sys.argv[1])
@@ -37,15 +50,16 @@ def start_server():
             file_info = client_socket.recv(1024).decode()
 
             # Extract filename and file size from file_info
-            action_type, file_name, filesize = file_info.split("|")
+            action_type, file_name, file_size = file_info.split("|")
 
             # Receive and save uploaded files
             while True:
                 if not file_info:
                     break
                 if action_type == "upload":
+                    print("hello world")
                     file_name = os.path.basename(file_name)
-                    filesize = int(filesize)
+                    file_size = int(file_size)
                     dest_file_path = files_dir + file_name
 
                     if os.path.exists(dest_file_path):
@@ -57,7 +71,7 @@ def start_server():
 
                     # Receive the file data
                     received_data = bytearray()
-                    while len(received_data) < filesize:
+                    while len(received_data) < file_size:
                         packet = client_socket.recv(1024)
                         if not packet:
                             break
@@ -72,7 +86,9 @@ def start_server():
                     download_file(files_dir, file_name, client_socket)
                     break
                 elif action_type == "list":
-                    print("hello")
+                    print("We are in the list function")
+                    list_files(client_socket)
+                    break
         finally:
             # Close the connection
             client_socket.close()
