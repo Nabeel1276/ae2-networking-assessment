@@ -2,6 +2,7 @@ import socket
 import argparse
 import sys, os
 
+
 def list_files(client_socket):
     print("you want to list current directory content")
     # Get list of files in server's working directory
@@ -14,9 +15,9 @@ def list_files(client_socket):
     client_socket.close()
 
 
-def download_file(file_name, client_socket):
+def download_file(files_dir, file_name, client_socket):
     print("you want to download", file_name)
-    with open(file_name, "rb") as file:
+    with open(files_dir + file_name, "rb") as file:
         data = file.read(1024)
         while data:
             client_socket.send(data)
@@ -27,6 +28,7 @@ def download_file(file_name, client_socket):
 
 def start_server():
     port_number = int(sys.argv[1])
+    files_dir = "./public_files/"
 
     # Create a socket object
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -57,7 +59,7 @@ def start_server():
                 if action_type == "upload":
                     file_name = os.path.basename(file_name)
                     file_size = int(file_size)
-                    dest_file_path = file_name
+                    dest_file_path = files_dir + file_name
 
                     if os.path.exists(dest_file_path):
                         print(dest_file_path, "already exists. Upload denied.")
@@ -80,7 +82,7 @@ def start_server():
                     print("File '{}' received and saved.".format(file_name))
                     break
                 elif action_type == "download":
-                    download_file(file_name, client_socket)
+                    download_file(files_dir, file_name, client_socket)
                     break
                 elif action_type == "list":
                     list_files(client_socket)
