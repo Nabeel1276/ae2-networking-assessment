@@ -1,6 +1,6 @@
 import socket
-import argparse
-import os, sys
+import os
+import sys
 
 
 def run_command(action, client_socket, file_path):
@@ -21,6 +21,14 @@ def download_file(file_name, client_socket):
     print("You want to download '{}'".format(file_name))
     # Send file info to the server
     client_socket.send("{}|{}|{}".format("download", file_name, 0).encode())
+
+    response = client_socket.recv(1024).decode()
+
+    if response == "ERROR_FILE_NOT_FOUND":
+        print("File '{}' does not exist on the server.".format(file_name))
+        client_socket.close()
+        return
+
     # Receive data from the server and write it to a file
     with open(file_name, "wb") as file:
         while True:

@@ -1,6 +1,6 @@
 import socket
-import argparse
-import sys, os
+import os
+import sys
 
 
 def list_files(client_socket):
@@ -16,14 +16,22 @@ def list_files(client_socket):
 
 
 def download_file(files_dir, file_name, client_socket):
-    print("you want to download", file_name)
-    with open(files_dir + file_name, "rb") as file:
+    print("You want to download", file_name)
+    file_path = files_dir + file_name
+    if not os.path.exists(file_path):
+        print("Invalid! File '{}' does not exist.".format(file_name))
+        client_socket.send("ERROR_FILE_NOT_FOUND".encode())
+        return
+
+    # Send confirmation to the client to start downloading
+    client_socket.send("READY".encode())
+
+    with open(file_path, "rb") as file:
         data = file.read(1024)
         while data:
             client_socket.send(data)
             data = file.read(1024)
         print("File sent successfully")
-        return
 
 
 def start_server():
