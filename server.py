@@ -83,13 +83,12 @@ def start_server():
 
             # Extract filename and file size from file_info
             action_type, file_name, file_size = client_message.split("|")
+            file_size = int(file_size)
 
             while True:
                 if not client_message:
                     break
                 if action_type == "upload":
-                    file_name = os.path.basename(file_name)
-                    file_size = int(file_size)
                     upload_file(files_dir, file_name, file_size, client_socket)
                     break
                 elif action_type == "download":
