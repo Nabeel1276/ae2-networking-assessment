@@ -3,10 +3,10 @@ import os
 import sys
 
 
-def list_files(client_socket):
+def list_files(files_dir, client_socket):
     print("you want to list current directory content")
     # Get list of files in server's working directory
-    files = os.listdir()
+    files = os.listdir(files_dir)
 
     # Send the list of files to the client
     client_socket.sendall("\n".join(files).encode())
@@ -34,6 +34,30 @@ def download_file(files_dir, file_name, client_socket):
         print("File sent successfully")
 
 
+def upload_file(files_dir, file_name, file_size, client_socket):
+    dest_file_path = files_dir + file_name
+
+    if os.path.exists(dest_file_path):
+        print(dest_file_path, "already exists. Upload denied.")
+        return
+
+    # Inform client to start sending the file
+    client_socket.send("SEND_FILE".encode())
+
+    # Receive the file data
+    received_data = bytearray()
+    while len(received_data) < file_size:
+        packet = client_socket.recv(1024)
+        if not packet:
+            return
+        received_data.extend(packet)
+
+    # Write the received data to the file
+    with open(dest_file_path, "wb") as f:
+        f.write(received_data)
+    print("File '{}' received and saved.".format(file_name))
+
+
 def start_server():
     port_number = int(sys.argv[1])
     files_dir = "./public_files/"
@@ -55,45 +79,24 @@ def start_server():
             client_socket, client_address = server_socket.accept()
             print("Connected to:", client_address)
 
-            file_info = client_socket.recv(1024).decode()
+            client_message = client_socket.recv(1024).decode()
 
             # Extract filename and file size from file_info
-            action_type, file_name, file_size = file_info.split("|")
+            action_type, file_name, file_size = client_message.split("|")
 
-            # Receive and save uploaded files
             while True:
-                if not file_info:
+                if not client_message:
                     break
                 if action_type == "upload":
                     file_name = os.path.basename(file_name)
                     file_size = int(file_size)
-                    dest_file_path = files_dir + file_name
-
-                    if os.path.exists(dest_file_path):
-                        print(dest_file_path, "already exists. Upload denied.")
-                        break
-
-                    # Inform client to start sending the file
-                    client_socket.send("READY".encode())
-
-                    # Receive the file data
-                    received_data = bytearray()
-                    while len(received_data) < file_size:
-                        packet = client_socket.recv(1024)
-                        if not packet:
-                            break
-                        received_data.extend(packet)
-
-                    # Write the received data to the file
-                    with open(dest_file_path, "wb") as f:
-                        f.write(received_data)
-                    print("File '{}' received and saved.".format(file_name))
+                    upload_file(files_dir, file_name, file_size, client_socket)
                     break
                 elif action_type == "download":
                     download_file(files_dir, file_name, client_socket)
                     break
                 elif action_type == "list":
-                    list_files(client_socket)
+                    list_files(files_dir, client_socket)
                     break
         finally:
             # Close the connection

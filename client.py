@@ -51,8 +51,8 @@ def upload_file(file_path, client_socket):
     # Wait for server's confirmation
     confirmation = client_socket.recv(1024).decode()
 
-    if confirmation != "READY":
-        print("Upload denied, it is possible that the file already exists.")
+    if confirmation != "SEND_FILE":
+        print("Upload denied, file already exists.")
         client_socket.close()
         return
 
